@@ -1,10 +1,11 @@
-var numberOfItemsToAdd = 100;
+var numberOfItemsToAdd = (window.location.hash.substr(1) | 0) || 100;
 var Suites = [];
 
 Suites.push({
     name: 'Backbone 1.1.2',
     url: 'todomvc/backbone/index.html',
     version: '1.1.2',
+    disabled: numberOfItemsToAdd >= 1000,
     prepare: function (runner, contentWindow, contentDocument) {
     contentWindow.Backbone.sync = function () {}
         return runner.waitForElement('#new-todo').then(function (element) {
@@ -44,6 +45,7 @@ Suites.push({
     name: 'Ember 1.4.0',
     url: 'todomvc/emberjs/index.html',
     version: '1.4.0 + Handlebars 1.3.0',
+    disabled: numberOfItemsToAdd >= 500,
     prepare: function (runner, contentWindow, contentDocument) {
         contentWindow.Todos.Store = contentWindow.DS.Store.extend({
             revision: 12,
@@ -96,6 +98,7 @@ Suites.push({
     name: 'Angular 1.5.3',
     url: 'todomvc/angularjs-perf/index.html',
     version: '1.5.3',
+    disabled: numberOfItemsToAdd >= 500,
     prepare: function (runner, contentWindow, contentDocument) {
         return runner.waitForElement('#new-todo').then(function (element) {
             element.focus();
@@ -132,6 +135,7 @@ Suites.push({
     name: 'React 15.0.2',
     url: 'todomvc/react/index.html',
     version: '15.0.2',
+    disabled: numberOfItemsToAdd >= 1000,
     prepare: function (runner, contentWindow, contentDocument) {
         contentWindow.Utils.store = function () {}
         return runner.waitForElement('.new-todo').then(function (element) {
@@ -170,6 +174,7 @@ Suites.push({
     name: 'Om 0.5',
     url: 'todomvc/om/index.html',
     version: '0.5.0 + React 0.9.0',
+    disabled: numberOfItemsToAdd >= 1000,
     prepare: function (runner, contentWindow, contentDocument) {
         return runner.waitForElement('#new-todo').then(function (element) {
             element.focus();
@@ -245,6 +250,7 @@ Suites.push({
     name: 'Elm 0.17',
     url: 'todomvc/elm17/index.html',
     version: '0.17',
+    disabled: numberOfItemsToAdd >= 1000,
     prepare: function (runner, contentWindow, contentDocument) {
         return runner.waitForElement('#new-todo').then(function (element) {
             element.focus();
@@ -282,6 +288,7 @@ Suites.push({
     name: 'Vue',
     url: 'todomvc/vue/index.html',
     version: '1.0.24',
+    disabled: numberOfItemsToAdd >= 2000,
     prepare: function (runner, contentWindow, contentDocument) {
         return runner.waitForElement('.new-todo').then(function (element) {
             element.focus();
@@ -321,6 +328,7 @@ Suites.push({
     name: 'Knockout',
     url: 'todomvc/knockoutjs/index.html',
     version: '3.1.0',
+    disabled: numberOfItemsToAdd >= 1000,
     prepare: function (runner, contentWindow, contentDocument) {
         return runner.waitForElement('#new-todo').then(function (element) {
             element.focus();
@@ -359,6 +367,7 @@ Suites.push({
 Suites.push({
     name: 'Ractive',
     url: 'todomvc/ractive/index.html',
+    disabled: numberOfItemsToAdd > 100,
     version: '0.3.9',
     prepare: function (runner, contentWindow, contentDocument) {
         return runner.waitForElement('#new-todo').then(function (element) {
@@ -468,9 +477,48 @@ Suites.push({
 });
 
 Suites.push({
+    name: 'Coconut',
+    url: 'todomvc/coconut/index.html',
+    version: 'DIY',
+    prepare: function (runner, contentWindow, contentDocument) {
+        return runner.waitForElement('header input').then(function (element) {
+            element.focus();
+            return element;
+        });
+    },
+    tests: [
+        new BenchmarkTestStep('Adding' + numberOfItemsToAdd + 'Items', function (newTodo, contentWindow, contentDocument) {
+            for (var i = 0; i < numberOfItemsToAdd; i++) {
+                var inputEvent = document.createEvent('Event');
+                inputEvent.initEvent('input', true, true);
+                newTodo.value = 'Something to do ' + i;
+                newTodo.dispatchEvent(inputEvent);
+
+                var keydownEvent = document.createEvent('Event');
+                keydownEvent.initEvent('keypress', true, true);
+                keydownEvent.keyCode = keydownEvent.which = 13; // VK_ENTER
+                newTodo.dispatchEvent(keydownEvent);
+            }
+        }),
+        new BenchmarkTestStep('CompletingAllItems', function (newTodo, contentWindow, contentDocument) {
+            var checkboxes = contentDocument.querySelectorAll('input[type="checkbox"]');
+            for (var i = 0; i < checkboxes.length; i++)
+                checkboxes[i].click();
+        }),
+        new BenchmarkTestStep('DeletingAllItems', function (newTodo, contentWindow, contentDocument) {
+            var deleteButtons = contentDocument.querySelectorAll('footer>button');
+            for (var i = 0; i < deleteButtons.length; i++)
+                deleteButtons[i].click();
+        })
+    ]
+});
+
+
+Suites.push({
     name: 'Vanilla',
     url: 'todomvc/vanilla-es6/index.html',
     version: '0.0.0',
+    disabled: numberOfItemsToAdd >= 500,
     prepare: function (runner, contentWindow, contentDocument) {
         return runner.waitForElement('.new-todo').then(function (element) {
             element.focus();
@@ -506,6 +554,7 @@ Suites.push({
 Suites.push({
     name: 'choo',
     url: 'todomvc/choo/index.html',
+    disabled: numberOfItemsToAdd > 100,
     version: '1.3.0',
     prepare: function (runner, contentWindow, contentDocument) {
         return runner.waitForElement('.new-todo').then(function (element) {
